@@ -1,0 +1,609 @@
+{% macro calendar(allow_approve) %}
+    {% if allow_approve is defined and allow_approve %}
+        {% set allowApprove = 1 %}
+    {% else %}
+        {% set allowApprove = 0 %}
+    {% endif %}
+
+    {% set editPopupTempalte = 'note_edit_popup_form' %}
+    {{ block('calendar_layout') }}
+{% endmacro %}
+
+{% macro user_order_calendar(allow_approve) %}
+    {% if allow_approve is defined and allow_approve %}
+        {% set allowApprove = 1 %}
+    {% else %}
+        {% set allowApprove = 0 %}
+    {% endif %}
+    {% set editPopupTempalte = 'note_empty_edit_popup' %}
+    {{ block('calendar_layout') }}
+{% endmacro %}
+
+{% block calendar_layout %}
+    {% block calendar_messages %}
+        <div class="message hidden clearfix" rv-if="data.attributes.message">
+            <div class="text pull-left" rv-text="data.attributes.message"></div>
+            <span class="close glyphicon glyphicon-remove" rv-on-click="view.closeMessage"></span>
+        </div>
+    {% endblock %}
+    {% block calendar_header %}
+        <div class="calendar-header hidden">
+            <div class="prev-day fl-l glyphicon glyphicon-chevron-left" rv-on-click="view.loadPrev"></div>
+            <div class="current-day">
+                <div class="date-wrapper">
+                    <div class="date fl-l" rv-on-click="loadCurrent">{ dateStr }</div>
+                    <div class="datepicker-icon fl-l" rv-on-click="view.showPicker"><input type="text"/></div>
+                    <div class="clearfix"></div>
+                </div>
+            </div>
+            <div class="next-day fl-l glyphicon glyphicon-chevron-right" rv-on-click="view.loadNext"></div>
+            <div class="clearfix"></div>
+        </div>
+    {% endblock %}
+    {% block calendar_content %}
+        <div class="calendar field hidden">
+            <div class="table">
+                <div class="time-labels fl-l">
+                    <div class="delimiter header"></div>
+                    <div rv-each-row="rows" rv-data-time="row.id" class="p-rel control">
+                        <div class="time" rv-if="row.timeShow" rv-height="row.timeSize">{ row.time }</div>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="fl-l">
+                    <div class="calendar-widget" rv-if="show">
+                        <div class="header-bg"></div>
+                        <div class="shadow" rv-if="disable"></div>
+                        <div class="calendar-field-wrapper" style="">
+                            <div class="header">
+                                {% block master_header %}
+                                    <div rv-each-master="data:activeMasters" class="fl-l master"
+                                         rv-class-active="master:active"
+                                         rv-class-in_work="master:inWork"
+                                         rv-style="columnStyle">
+                                        { master:lastName }
+                                    </div>
+                                {% endblock %}
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="work-field">
+                                {% block master_field %}
+                                    <div rv-each-master="data:activeMasters" class="fl-l master"
+                                         rv-class-active="master:active"
+                                         rv-class-in_work="master:inWork"
+                                         rv-data-master="master:id"
+                                         rv-style="workColumnStyle"
+                                         rv-on-click="view.addNote"
+                                         rv-droppable="view"
+                                            >
+                                        <div class="buffer"
+                                             rv-on-click="view.bufferClick"
+                                             rv-each-buffer="master:bufferElements"
+                                             rv-html="buffer.render"
+                                                ></div>
+                                        {% block note %}
+                                            <div class="note"
+                                                 rv-each-note="master.attributes.noteViews"
+                                                    {#rv-class-editable="note.model:editable"#}
+                                                 rv-draggable="note"
+                                                 rv-style="note.contentStyle"
+                                                 rv-data-master="master:id"
+                                                 rv-data-note="note.model:id"
+                                                 rv-class-approved="note.model:approved"
+                                                 rv-class-editable="note.model:editable"
+                                                    >
+                                                {% block note_content %}
+                                                    <div class="note-content" rv-class-editable="note.model:new"
+                                                         rv-style="note.noteStyle"
+                                                         rv-on-click="note.click"
+                                                         rv-tooltip="note"
+                                                            >
+                                                        <div class="info" rv-if="note.showInfo">
+                                                            <div rv-if="note.model:name" class="name">Контактное
+                                                                лицо: <span
+                                                                        rv-text="note.model:name"></span></div>
+                                                            <div class="phone" rv-if="note.model:phone">Телефон: <span
+                                                                        rv-text="note.model:phone"></span></div>
+                                                        </div>
+                                                    </div>
+                                                {% endblock %}
+                                                <div class="note-settings show" rv-if="note.model.attributes.edit"
+                                                     rv-style="note.popupStyle">
+                                                    {% block note_edit_popup %}
+                                                        {% if not editPopupTempalte is defined %}
+                                                            {{ block('note_edit_popup_form') }}
+                                                        {% else %}
+                                                            {{ block(editPopupTempalte) }}
+                                                        {% endif %}
+                                                    {% endblock %}
+                                                </div>
+                                            </div>
+                                        {% endblock %}
+                                    </div>
+                                {% endblock %}
+                            </div>
+                            <div class="clearfix"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+    {% endblock %}
+{% endblock %}
+
+{% block note_edit_popup_form %}
+    <form>
+        <div class="close glyphicon glyphicon-remove"
+             rv-on-click="note.closeSettingsPopup"></div>
+        <form class="">
+            <div class="form-group">
+                <div><label for="phone">Телефон:</label></div>
+                <input type="text" rv-value="note.model:phone" rv-mask="note.model:phone" data- id="phone"/></div>
+            <div class="form-group">
+                <div><label for="phone">Имя:</label></div>
+                <input type="text" rv-value="note.model:name" id="phone"/></div>
+            <div class="form-group" rv-class-error="note.model:errorTime">
+                <label>C:</label>
+                <input type="text" rv-value="note.model:hours" class="hours"
+                       size="2" maxlength="2"> :
+                <input type="text" rv-value="note.model:minutes" class="minutes"
+                       size="2" maxlength="2">
+            </div>
+            {% if allowApprove %}
+                <div class="checkbox">
+                    <label rv-on-click="note.model.approveToggle">
+                        <input type="checkbox" rv-checked="note.model.attributes.approved" value="1">Подтвердить
+                    </label>
+                </div>
+            {% endif %}
+            <div class="checkbox">
+                <label
+                        rv-on-click="note.model.reserveStartToggle">
+                    <input type="checkbox" rv-checked="note.model.attributes.reserveStart" value="1">
+                    Наложение 15 мин до</label>
+            </div>
+            <div class="checkbox">
+                <label rv-on-click="note.model.reserveEndToggle">
+                    <input type="checkbox" rv-checked="note.model.attributes.reserveEnd" value="1" >
+                    Наложение15 мин после
+                </label>
+            </div>
+            <div class="actions">
+                <button type="submit" class="btn btn-info"
+                        rv-on-click="note.saveNote">Сохранить
+                </button>
+
+                {% if allowApprove %}
+                    <button type="submit" class="btn btn-danger"
+                            rv-on-click="note.deleteNote">Удалить
+                    </button>
+                {% endif %}
+            </div>
+        </form>
+    </form>
+{% endblock %}
+{% block note_empty_edit_popup %}
+{% endblock %}
+
+{% macro calendarInfo(serviceCategories, schedule) %}
+    <script type="text/javascript">
+        window.OrderSystem = {};
+        OrderSystem.categories = {{ serviceCategories|json_encode|raw }};
+        OrderSystem.baseSchedule = {{ schedule|json_encode|raw }};
+        {#OrderSystem.evenMasters = {{ evenMasters|json_encode|raw }};#}
+        {#OrderSystem.salon = {{ salon|json_encode|raw }};#}
+    </script>
+{% endmacro %}
+
+{% macro categories_filter() %}
+    <div class="categories-widget row">
+        <div class="category col-md-4" rv-each-category="categories|toArray"
+             rv-class-disabled="category.disabled"
+             rv-on-click="view.categoryToggle">
+            <div rv-class="category.preview" rv-class-active="category.active" class="preview"></div>
+            <div class="text">{ category.name }</div>
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro masters_filter() %}
+    <div class="masters-widget clearfix">
+        <div class="master" rv-master="masters">
+
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro data_filter() %}
+    <div class="day-filter-widget clearfix">
+        <div class="prev arrow fl-l">
+            <span class="glyphicon glyphicon-arrow-left" rv-on-click="view.loadPrev"></span>
+        </div>
+        <div class="current fl-l">
+            <div rv-text="dateStr"></div>
+            <div class="datepicker-icon" rv-on-click="view.showPopup"><input type="text"></div>
+        </div>
+        <div class="next arrow fl-l">
+            <span class="glyphicon glyphicon-arrow-right" rv-on-click="view.loadNext"></span>
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro remove_widget() %}
+    <div class="remove-widget" rv-remove-drop="view">
+        <div class="image glyphicon glyphicon-remove"></div>
+        <div class="text">
+            Чтобы удалить запись перетащите ее сюда
+        </div>
+    </div>
+{% endmacro %}
+
+{% block time_labels %}
+    <div rv-each-row="rows" rv-data-time="row.id" class="p-rel control">
+        <div class="time fl-l" rv-if="row.timeShow" rv-height="row.timeSize">{ row.time }</div>
+        <div class="time-small fl-l"
+             rv-class-first="row.first"
+             rv-class-last="row.last"
+             rv-class-odd="row.odd"
+                >{ row.time }</div>
+    </div>
+{% endblock %}
+
+{% macro time_labels() %}
+    {{ block('time_labels') }}
+{% endmacro %}
+
+{% block calendar_header_filters %}
+    <td rv-each-category="categories|toArray" class="category invisible"
+        rv-class-disabled="category.disabled"
+        rv-class-active_td="category.active" rv-colspan="category.masters|count"
+        rv-on-click="view.categoryDisableOther">
+        { category.name }
+    </td>
+{% endblock %}
+
+{% block week_header_filters %}
+    <td rv-each-day="weekOptions.days|toArray" class="day"
+        rv-colspan="2"
+        rv-on-click="view.openDayCalendar">
+        <div>{ day|date_readable }</div>
+        <div rv-each-category="categories|toArray" class="cat invisible"
+            rv-class-disabled="category.disabled"
+            rv-class-active_td="category.active"
+            rv-on-click="view.categoryDisableOther">
+            { category.name }
+        </div>
+    </td>
+{% endblock %}
+
+{% block note_edit_form %}
+    <div class="note-edit db-close" rv-class-key1="note.model:edit" rv-silent-move="column.view"
+         rv-class-key2="column.showPopup" rv-class-active="note.model:edit"
+         rv-class-active="note.model:edit" rv-on-click="note.stopPropagation">
+        <div class="note-header">Обычная запись</div>
+        <div class="row clearfix">
+            <div class="name last-name fl-l">
+                <label>
+                    Фамилия:
+                    <input type="text" class="" rv-autocomplete="note.loadBySurname" ac-source="/api/customer/surname" rv-value="note.model:lastName" rv-class-error="note.model:lNameError" />
+                </label>
+            </div>
+            <div class="name first-name fl-l">
+                <label>
+                    Имя:
+                    <input type="text" class="" rv-autocomplete="note.loadByName" ac-source="/api/customer/name" rv-value="note.model:firstName"  rv-class-error="note.model:fNameError" />
+                </label>
+            </div>
+        </div>
+        <div class="clearfix row">
+            <label  class="fl-l phone" >
+                Телефон:
+                <input type="tel" rv-value="note.model:phone" rv-autocomplete="note.loadByPhone" ac-source="/api/customer/phone" rv-class-error="note.model:phoneError">
+            </label>
+            <label class="fl-l type">
+                Услуга:
+                <select rv-select-service="note.model" class="fl-l"
+                        rv-class-error="note.model:serviceError"
+                        rv-conditional-tooltip="note.model:serviceError"
+                        >
+                    <option value="0">Выберите</option>
+                    <option rv-each-duration="column.view.model:durations|toArray"
+                            rv-data-duration="duration.duration"
+                            rv-option="note.model:service"
+                            rv-value="duration.jobType">{ duration.name }</option>
+                </select>
+            </label>
+        </div>
+        <div class="row clearfix">
+            <div class="time fl-l">
+                <select rv-select-hours="note.model"  rv-class-error="note.model:hoursError">
+                    <option rv-each-hour="data.hours" rv-value="hour.val" rv-option="note.model.attributes.hours">
+                        { hour.label }
+                    </option>
+                </select>
+                -
+                <select rv-select-minutes="note.model"  rv-class-error="note.model:minutesError">
+                    <option rv-each-minute="data.minutes" rv-value="minute.val" rv-option="note.model.attributes.minutes">
+                        { minute.label }
+                    </option>
+                </select>
+            </div>
+
+            <div class="master-info fl-l">
+                <label>Мастер:</label>
+                { column.model:firstName } { column.model:lastName }
+            </div>
+        </div>
+        <div class="row">
+            <a href="#" class="btn blue" rv-on-click="note.approveNote">Подтвердить</a>
+            <a href="#" class="btn red" rv-on-click="note.removeNote">Удалить</a>
+        </div>
+    </div>
+{%endblock%}
+
+{%block note_info_popup %}
+<div class="note-info db-close" rv-class-key1="note.model:showInfo"
+     rv-silent-move="column.view"
+     rv-class-key2="column.showPopup" rv-class-active="note.model:showInfo" rv-on-click="note.stopPreparation">
+    <div rv-if="note.model:bySite" class="note-header">Запись через Beauty&Secret</div>
+    <div rv-unless="note.model:bySite" class="note-header">Запись</div>
+    <div class="master-info row">
+        <span rv-text="column.model:firstName"></span> <span rv-text="column.model:lastName"></span>
+    </div>
+    <div class="customer-info row">
+        <a href="{{ path("salon_calendar", { week_calendar: true }) }}"><span rv-text="note.mode:firstName"></span> <span rv-text="note.mode:lastName"></span></a>
+    </div>
+    <div class="phone-info row">
+        <span rv-text="note.mode:phone"></span>
+    </div>
+
+    <div class="data-table clearfix row">
+        <div class="labels fl-l">
+            <div>Услуга</div>
+            <div>Мастер</div>
+            <div>Время</div>
+        </div>
+        <div class="data fl-l">
+            <div rv-text="note.jobName"></div>
+            <div><span rv-text="note.serviceName"></span></div>
+            <div><span class="column" rv-text="note.model:hours"></span>:<span class="column" rv-text="note.model:minutes"></span> -
+                <span class="column" rv-text="note.model:toHours"></span>:<span class="column" rv-text="note.model:toMinutes"></span></div>
+        </div>
+    </div>
+    <div class="row">
+        <a href="#" class="btn blue" rv-on-click="note.editNote">Редактировать</a>
+        <a href="#" class="btn red" rv-on-click="note.removeNote">Удалить</a>
+    </div>
+</div>
+{%endblock%}
+
+{% block column %}
+    <tr class="header time-labels">
+        <td rv-each-column="columns" class="master invisible"
+            rv-on-click="view.activateWeekAndMasterOnlyCallback"
+            rv-class-active_td="column.view.model:active">
+            <div>{ column.view.model:firstName } { column.view.model:lastName }</div>
+        </td>
+    </tr>
+    <tr>
+        <td rv-each-column="columns"
+            class="invisible work-column"
+            rv-class-active_td="column.view.model:active"
+            rv-data-grid="calendarOptions.workGridStart"
+            rv-click="column.view.clickHandler"
+            rv-on-dblclick="column.view.addNote"
+            rv-dropable-column="column"
+            rv-css-height="calendarOptions.height"
+                >
+            <div rv-each-note="column.view.notes" style="width: 310px;"
+                 class="note-edit db-close" rv-class-key1="note.model:edit"
+                 rv-class-key2="column.showPopup"></div>
+            <div rv-each-note="column.view.notes" style="width: 310px;"
+                 class="note-edit db-close" rv-class-key1="note.model:showInfo"
+                 rv-class-key2="column.showPopup"></div>
+            <div class="runner-field">
+                <div class="mark db-close"
+                     rv-class-key1="column.mark"
+                     rv-class-key2="view.options.markAbility"
+                     rv-css-top="column.markTop"
+                        >
+                </div>
+            </div>
+            <div class="info-field">
+                <div class="note"
+                     rv-css-height="note.model:duration|timeToPixel"
+                     rv-css-top="note.getTopOffset"
+                     rv-each-note="column.view.notes"
+                     rv-class-by_site="note.model:bySite"
+                     rv-data-note="note.model:id"
+                     rv-resizable-note="note"
+                     rv-data-column="column.view.model:id"
+                     rv-data-category="column.view.model:category"
+                     rv-add-el="note"
+                     rv-silent-move="column.view"
+                     rv-on-dblclick="note.showInfo"
+                     rv-draggable-note="note"
+                     rv-class-offset_top="note.model:reserveStart"
+                     rv-class-offset_bottom="note.model:reserveEnd"
+                        >
+                </div>
+                <div class="buffer"
+                     rv-each-buffer="column.view.buffers"
+                     rv-css-height="buffer.height"
+                     rv-css-top="buffer.start"
+                     rv-silent-move="column.view"
+                     rv-on-click="column.view.stopPropagation"
+                        >
+                </div>
+            </div>
+            <div class="note-popups">
+                <div class="note"
+                     rv-each-note="column.view.notes"
+                     rv-data-note="note.model:id"
+                     rv-data-column="column.view.model:id"
+                     rv-data-category="column.view.model:category"
+                     rv-css-top="note.popupOffsetTop"
+                     rv-class-offset_top="note.model:reserveStart"
+                     rv-class-offset_bottom="note.model:reserveEnd"
+                        >
+                    {{ block('note_edit_form') }}
+                    {{ block('note_info_popup') }}
+                </div>
+            </div>
+        </td>
+    </tr>
+{% endblock %}
+
+{% macro day_calendar() %}
+    <div class="calendar-container" rv-class-hidden="hidden">
+        <div class="message hidden clearfix" rv-if="data.attributes.message">
+            <div class="text pull-left" rv-text="data.attributes.message"></div>
+            <span class="close glyphicon glyphicon-remove" rv-on-click="view.closeMessage"></span>
+        </div>
+        <div class="clearfix">
+            <div class="fl-l">
+                <div class="empty-data day" rv-on-click="view.activateAll">
+                    Все расписание на день
+                </div>
+                <div class="time-labels clearfix">
+                    {{ block("time_labels") }}
+                    <div class="dilimiter"></div>
+                </div>
+            </div>
+            <div class="table-wrapper fl-l" rv-scroll="view">
+                <table class="columns"
+                       rv-call="view.initializeTable"
+                        >
+                    <tr class="header">
+                        {{ block("calendar_header_filters") }}
+                    </tr>
+                    {{ block("column") }}
+                </table>
+            </div>
+        </div>
+    </div>
+{% endmacro %}
+
+{% block week_column %}
+    <table class="columns">
+        <tr class="header time-labels">
+            <td rv-each-column="category.columns" class="master invisible"
+                rv-on-click="view.activateMasterOnly"
+                rv-class-active_td="column.view.model:active">
+                <div>{ column.view.model:firstName } { column.view.model:lastName }</div>
+            </td>
+        </tr>
+        <tr>
+            <td rv-each-column="category.columns"
+                class="invisible work-column"
+                rv-class-active_td="column.view.model:active"
+                rv-data-grid="calendarOptions.workGridStart"
+                rv-click="column.view.clickHandler"
+                rv-on-dblclick="column.view.addNote"
+                rv-dropable-column="column"
+                rv-css-height="calendarOptions.height"
+                    >
+                <div rv-each-note="column.view.notes" style="width: 310px;"
+                     class="note-edit db-close" rv-class-key1="note.model:edit"
+                     rv-class-key2="column.showPopup"></div>
+                <div rv-each-note="column.view.notes" style="width: 310px;"
+                     class="note-edit db-close" rv-class-key1="note.model:showInfo"
+                     rv-class-key2="column.showPopup"></div>
+                <div class="runner-field">
+                    <div class="mark db-close"
+                         rv-class-key1="column.mark"
+                         rv-class-key2="view.options.markAbility"
+                         rv-css-top="column.markTop"
+                            >
+                    </div>
+                </div>
+                <div class="info-field">
+                    <div class="note"
+                         rv-css-height="note.model:duration|timeToPixel"
+                         rv-css-top="note.getTopOffset"
+                         rv-each-note="column.view.notes"
+                         rv-class-by_site="note.model:bySite"
+                         rv-data-note="note.model:id"
+                         rv-resizable-note="note"
+                         rv-data-column="column.view.model:id"
+                         rv-data-category="column.view.model:category"
+                         rv-add-el="note"
+                         rv-silent-move="column.view"
+                         rv-on-dblclick="note.showInfo"
+                         rv-draggable-note="note"
+                         rv-class-offset_top="note.model:reserveStart"
+                         rv-class-offset_bottom="note.model:reserveEnd"
+                            >
+                    </div>
+                    <div class="buffer"
+                         rv-each-buffer="column.view.buffers"
+                         rv-css-height="buffer.height"
+                         rv-css-top="buffer.start"
+                         rv-silent-move="column.view"
+                         rv-on-click="column.view.stopPropagation"
+                            >
+                    </div>
+                </div>
+                <div class="note-popups">
+                    <div class="note"
+                         rv-each-note="column.view.notes"
+                         rv-data-note="note.model:id"
+                         rv-data-column="column.view.model:id"
+                         rv-data-category="column.view.model:category"
+                         rv-css-top="note.popupOffsetTop"
+                         rv-class-offset_top="note.model:reserveStart"
+                         rv-class-offset_bottom="note.model:reserveEnd"
+                            >
+                        {{ block('note_edit_form') }}
+                        {{ block('note_info_popup') }}
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
+{% endblock %}
+
+{% macro week_calendar() %}
+    <div class="calendar-container" rv-class-hidden="hidden">
+        <div class="message hidden clearfix" rv-if="data.attributes.message">
+            <div class="text pull-left" rv-text="data.attributes.message"></div>
+            <span class="close glyphicon glyphicon-remove" rv-on-click="view.closeMessage"></span>
+        </div>
+        <div class="clearfix">
+            <div class="fl-l">
+                <div class="empty-data week" rv-on-click="view.activateAll">
+                    Все расписание на неделю
+                </div>
+                <div class="time-labels clearfix">
+                    {{ block("time_labels") }}
+                    <div class="dilimiter"></div>
+                </div>
+            </div>
+            <div class="table-wrapper fl-l" rv-scroll="view">
+                <table class="day">
+                    <tr>
+                    <td class="day-header" rv-each-day_info="weekOptions.columns|toArray">
+                        <div class="header-date" rv-on-click="view.choseDayAndDayCalendar">{ day_info.day.day|date_readable }</div>
+                        <table class="categories">
+                            <tr>
+                                <td class="category invisible"
+                                    rv-each-category="day_info.categories|toArray"
+                                    rv-class-disabled="category.category.disabled"
+                                    rv-class-active_td="category.category.active"
+                                    rv-call="view.zebra"
+                                        >
+                                    <div class="category-name">
+                                        <span class="wrapper"><span>{ category.category.name }</span></span>
+                                    </div>
+                                    {{ block('week_column') }}
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endmacro %}

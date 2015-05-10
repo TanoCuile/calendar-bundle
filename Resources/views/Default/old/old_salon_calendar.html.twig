@@ -1,0 +1,131 @@
+{% extends '::base.html.twig' %}
+
+{% import "UserBundle:Profile:blocks.html.twig" as blocks %}
+{% import "CalendarBundle:Default:blocks.html.twig" as calendarBlocks %}
+{% block main_content %}
+    {% block menu_wrap %}
+        {{ blocks.advanced_menu() }}
+    {% endblock %}
+    <div class="main_content salon-order">
+        <div class="menu_wrap container menu-categories categories">
+            <h2>Прием заявок администратором</h2>
+
+            <div class="menu">
+                <ul class="service-categories">
+                    {% for id,category in servicesHierarchy %}
+                        <li class="category-{{ category.id }} {% if loop.first %}act{% endif %}">
+                            <a href="#" class="service" data-cat="{{ category.id }}">{{ category.name }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="masters list">
+                <div class="submenu hidden" rv-data-cat="data:activeCat">
+                    <h3>Мастера этой категории услуг: </h3>
+                    <div class="item-list">
+                        <div class="item-container">
+                            <div class="item" rv-each-worker="data.attributes.activeMasters"
+                                 rv-class-active="worker:inWork">
+                                <a href="#"
+                                   rv-class-active="worker:active"
+                                   rv-data-master="worker:id"
+                                   {#rv-on-click="view:masterClickHandler"#}
+                                        >
+                                    <img rv-on-click="view.clickParent" rv-src="worker:avatar.webPath" class="master-preview" rv-if="worker:avatar" />
+                                    <img rv-on-click="view.clickParent" src="/bundles/home/img/no_avatar.png" class="master-preview" rv-unless="worker:avatar" />
+                                    <span class="check-button" rv-on-click="view.clickParent"></span>
+                                    <div rv-on-click="view.clickParent" class="name">{ worker:firstName } { worker:lastName }</div>
+                                </a>
+                            </div>
+                            <div class="clearfix"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="content container">
+            <div class="row">
+                <div class="left-sidebar col-md-6">
+                    <div class="job-types hidden">
+                        <div class="category-types" rv-if="active" id="accordion">
+                            <div class="service-type" rv-each-type="types">
+                                <h4 class="panel-title">
+                                    <a data-toggle="collapse" data-parent="#accordion"
+                                       rv-href="type.href"
+                                       rv-data-id="type.id">
+                                        { type.name }
+                                        <span></span>
+                                    </a>
+                                    <span class="clearfix"></span>
+                                </h4>
+
+                                <div rv-id="type.link"
+                                     class="data collapse in">
+                                    <ul>
+                                        <li rv-each-job="type.jobs">
+                                            <a href="#" class="job-type" rv-data-id="job.id" rv-data-cat="cat"
+                                               rv-data-type="type.id" rv-on-click="view.selectJobType"
+                                               rv-class-active="job.active"><span rv-on-click="view.clickParent"></span>{
+                                                job.name }</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="calendar_wrapper col-md-14">
+                    {{ calendarBlocks.calendar(allow_approve) }}
+                </div>
+            </div>
+        </div>
+    </div>
+    {{ calendarBlocks.calendarInfo(servicesHierarchy, schedule) }}
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" type="text/css"
+          href="{{ asset('bundles/calendar/lib/wdCalendar/jquery.weekcalendar.css') }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ asset('bundles/home/lib/scrollpane/jquery.jscrollpane.css') }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ asset('bundles/calendar/css/calendar.css') }}"/>
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    {% javascripts
+        '@CalendarBundle/Resources/public/js/models/calendar_note.js'
+        '@CalendarBundle/Resources/public/js/models/order_note.js'
+        '@CalendarBundle/Resources/public/js/models/working_note.js'
+        '@CalendarBundle/Resources/public/js/models/calendar_info.js'
+
+        '@CalendarBundle/Resources/public/js/services/rivets_calendar.js'
+
+        '@CalendarBundle/Resources/public/js/views/calendar/buffer.js'
+        '@CalendarBundle/Resources/public/js/views/calendar/note.js'
+        '@CalendarBundle/Resources/public/js/views/calendar/calendar.js'
+        '@CalendarBundle/Resources/public/js/views/calendar/job_types_switcher.js'
+        '@CalendarBundle/Resources/public/js/views/calendar/categories_switcher.js'
+    %}{#filter='jsminplus'#}
+    {#output='js/compiled/calendar.js'#}
+    <script type="text/javascript" src="{{ asset_url }}"></script>
+    {% endjavascripts %}
+    <script type="text/javascript">
+        (function($){
+            $(document).ready(function(){
+                initializeCalendarInfo(OrderSystem);
+                initializeRivetsCalendar(OrderSystem);
+                initializeCalendar(OrderSystem);
+                initializeJobTypeSwitcher(OrderSystem);
+                initializeCategoriesSwitcher(OrderSystem);
+                initializeBufferView(OrderSystem);
+                initializeCalendarNote(OrderSystem);
+                initializeOrderNote(OrderSystem);
+                initializeNote(OrderSystem);
+
+                OrderSystem.categoriesSwitcher = new OrderSystem.CategoriesSwitcherVeiew({
+                    el: $('.menu_wrap.menu-categories')[0]
+                });
+            });
+        })(jQuery)
+    </script>
+{% endblock %}

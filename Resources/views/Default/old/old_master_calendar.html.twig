@@ -1,0 +1,227 @@
+{% extends '::base.html.twig' %}
+
+{% import "UserBundle:Profile:blocks.html.twig" as blocks %}
+{% import "CalendarBundle:Default:blocks.html.twig" as calendarBlocks %}
+{% block main_content %}
+    {% block menu_wrap %}
+        {{ blocks.advanced_menu() }}
+    {% endblock %}
+    <div class="main_content master-order">
+        <div class="content container">
+            <div class="row">
+                <div class="left-sidebar col-md-10">
+                    <div class="schedule-switcher hidden">
+                        <h3>Место работы</h3>
+
+                        <div class="schedule">
+                            <div class="schedule-wrapper">
+                                <div class="form">
+                                    <div rv-each-day="schedule:workDays" class="day clearfix"
+                                         rv-class-act="day:current">
+                                        <div rv-if="day:active">
+                                            <div class="fl-l">{day:dayName}</div>
+
+                                            <div class="time fl-l">
+                                                <span rv-text="day:fromHour"></span>:<span rv-text="day:fromMin"></span>
+                                                -
+                                                <span rv-text="day:toHour"></span>:<span rv-text="day:toMin"></span>
+                                            </div>
+                                            <div class="salon-name"><span rv-text="day:salonName"></span></div>
+                                            <div class="clearfix"></div>
+                                        </div>
+                                        <div rv-unless="day:active"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="services">
+                        <h3>Предоставляемые услуги</h3>
+
+                        <div class="job-types">
+                            <div class="category-types" id="accordion">
+                                {% for category in servicesHierarchy %}
+                                    <div data-cat="{{ category.id }}"
+                                         class="category {% if loop.first %}active{% endif %}">
+                                        {% for type in category.types %}
+                                            <div class="service-type">
+                                                <h4 class="panel-title">
+                                                    <a data-toggle="collapse" data-parent="#accordion"
+                                                       href="#service-type-{{ type.id }}"
+                                                       data-id="{{ type.id }}">
+                                                        {{ type.name }}
+                                                        <span></span>
+                                                    </a>
+                                                    <span class="clearfix"></span>
+                                                </h4>
+
+                                                <div id="service-type-{{ type.id }}"
+                                                     class="data collapse in">
+                                                    <ul>
+                                                        {% for job in type.jobTypes %}
+                                                            <li class="job-{{ job.id }}">
+                                                                <a href="#" class="job-type" data-id="{{ job.id }}"
+                                                                   data-cat="{{ category.id }}"
+                                                                   data-type="{{ type.id }}"
+                                                                   rv-on-click="view.selectJobType">
+                                                                    <span rv-on-click="view.clickParent"></span>
+                                                                    {{ job.name }}
+                                                                </a>
+                                                            </li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-10">
+                    <div class="calendar_wrapper">
+                        {{ calendarBlocks.calendar(allow_approve) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{ calendarBlocks.calendarInfo(servicesHierarchy, schedule) }}
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" type="text/css"
+          href="{{ asset('bundles/calendar/lib/wdCalendar/jquery.weekcalendar.css') }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ asset('bundles/home/lib/scrollpane/jquery.jscrollpane.css') }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ asset('bundles/calendar/css/calendar.css') }}"/>
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    {% javascripts
+    '@CalendarBundle/Resources/public/js/models/calendar_note.js'
+    '@CalendarBundle/Resources/public/js/models/order_note.js'
+    '@CalendarBundle/Resources/public/js/models/working_note.js'
+    '@CalendarBundle/Resources/public/js/models/calendar_info.js'
+
+    '@CalendarBundle/Resources/public/js/services/rivets_calendar.js'
+
+    '@CalendarBundle/Resources/public/js/views/calendar/buffer.js'
+    '@CalendarBundle/Resources/public/js/views/calendar/note.js'
+    '@CalendarBundle/Resources/public/js/views/calendar/calendar.js'
+    '@CalendarBundle/Resources/public/js/views/calendar/schedule_switcher.js'
+    '@CalendarBundle/Resources/public/js/views/calendar/job_type_widget.js'
+
+    '@CalendarBundle/Resources/public/js/models/schedule.js' %}{#filter='jsminplus'#}
+    {#output='js/compiled/calendar.js'#}
+    <script type="text/javascript" src="{{ asset_url }}"></script>
+    {% endjavascripts %}
+    <script type="text/javascript">
+        (function ($) {
+            $(document).ready(function () {
+                initializeCalendarInfo(OrderSystem);
+                initializeRivetsCalendar(OrderSystem);
+                initializeCalendar(OrderSystem);
+                initializeSchedule(OrderSystem);
+                initializeScheduleSwitcher(OrderSystem);
+                initializeJobTypeWidget(OrderSystem);
+                initializeBufferView(OrderSystem);
+                initializeCalendarNote(OrderSystem);
+                initializeOrderNote(OrderSystem);
+                initializeNote(OrderSystem);
+                OrderSystem.evenSalons = {};
+                {% for salon in user.evenSalons %}
+                OrderSystem.evenSalons[{{ salon.id }}] = {{ salon.jsonSerialize()|json_encode|raw }};
+                {% endfor %}
+
+                OrderSystem.master = {{ master|json_encode|raw }};
+                //OrderSystem.master.notes = [];
+                OrderSystem.master.inWork = true;
+                OrderSystem.master.active = true;
+                OrderSystem.master.noteViews = [];
+                OrderSystem.master.schedule = OrderSystem.baseSchedule;
+                OrderSystem.master = new Backbone.Model(OrderSystem.master);
+
+                var options = new OrderSystem.CalendarInfo({
+                    activeMasters: [],
+                    activeCat: 0
+                });
+                // check active category
+                var cat = parseInt($('.category.active').data('data-cat'));
+
+                options.set('activeMasters', [OrderSystem.master]);
+                function getWorkDay(schedule, day) {
+                    var workDay = null;
+                    _.each(schedule.workDays, function (dayObj) {
+                        if (dayObj && dayObj.dayId == day) {
+                            workDay = dayObj;
+                            return {};
+                        }
+                    });
+                    return workDay;
+                };
+
+                OrderSystem.scheduleSwitcher = new OrderSystem.ScheduleSwitcher({
+                    el: $('.schedule-switcher'),
+                    data: options,
+                    schedule: OrderSystem.baseSchedule,
+                    master: OrderSystem.master
+                });
+
+                // Initialize calendar widget, cause we want to have one data system initialized on categories system
+                OrderSystem.calendar = new OrderSystem.CalendarWidgetView({
+                    el: $('.calendar_wrapper')[0],
+                    data: options,
+                    colWidth: 364,
+                    // For header
+                    columnStyle: 'width:364px;',
+                    // For work field
+                    workColumnStyle: 'width:364px;',
+                    widgetWidthOffset: 72,
+                    heightAppend: 49,
+                    additionalDateCheck: function (calendar, date) {
+                        var day = date.getDay();
+                        var workDay = getWorkDay(OrderSystem.baseSchedule, day);
+                        if (workDay) {
+                            return [true];
+                        }
+                        return [false];
+                    },
+                    afterMastersChange: function () {
+                        OrderSystem.scheduleSwitcher.changeDay(this.options.date);
+                    }
+                });
+                //OrderSystem.scheduleSwitcher.changeDay(OrderSystem.calendar.options.date);
+                OrderSystem.jobTypeWidget = new OrderSystem.JobTypeWidgetView({
+                    el: $('.left-sidebar .job-types')[0],
+                    data: options
+                });
+                OrderSystem.calendar.changeMasterActive();
+
+                function changeCategory(category) {
+                    category = parseInt(category);
+                    this.options.set('activeCat', category);
+
+                    // Disactivate old masters
+                    _.each(this.options.get('activeMasters'), function (master) {
+                        master.set('active', false);
+                    }.bind(this));
+                    // Drop old masters, for correct rivets support
+                    _.each(this.options.get('activeMasters'), function () {
+                        this.options.get('activeMasters').pop();
+                    }.bind(this));
+
+                    // Add masters of active category
+                    _.each(base.categories[category].subElements, function (master) {
+                        master.active = true;
+                        master.inWork = true;
+                        master.notes = [];
+                        master.noteViews = [];
+                        this.options.get('activeMasters').push(new Backbone.Model(master));
+                    }.bind(this));
+                };
+            });
+        })(jQuery)
+    </script>
+{% endblock %}

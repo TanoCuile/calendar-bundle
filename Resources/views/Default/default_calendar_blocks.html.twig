@@ -1,0 +1,234 @@
+{% block time_labels %}
+    <div class="clearfix">
+        <div class="p-rel fl-l">
+            <div rv-each-row="{{ timesPath }}" rv-data-time="row.id" class="control">
+                <div class="time" rv-height="row.timeSize">{ row.time }</div>
+            </div>
+        </div>
+        <div class="fl-l">
+            <div rv-each-row="{{ rowsPath }}" class="p-rel control time-small"
+                 rv-class-first="row.first"
+                 rv-class-last="row.last"
+                 rv-class-odd="row.odd"
+                    >{ row.time }</div>
+        </div>
+    </div>
+{% endblock %}
+
+{% macro time_labels(rowsPath, timesPath) %}
+    {% if rowsPath == null %}
+        {% set rowsPath = 'rows' %}
+    {% endif %}
+    {% if timesPath == null %}
+        {% set timesPath = 'times' %}
+    {% endif %}
+    {{ block('time_labels') }}
+{% endmacro %}
+
+{% macro data_filter() %}
+    <div class="day-filter-widget clearfix">
+        <div class="prev arrow fl-l">
+            <span class="glyphicon glyphicon-arrow-left" rv-on-click="view.loadPrev"></span>
+        </div>
+        <div class="current fl-l">
+            <div rv-text="dateStr" class="fl-l str"></div>
+            <div class="datepicker-icon fl-l" rv-on-click="view.showPicker"><input type="text"></div>
+        </div>
+        <div class="next arrow fl-l">
+            <span class="glyphicon glyphicon-arrow-right" rv-on-click="view.loadNext"></span>
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro remove_widget() %}
+    <div class="remove-widget" rv-remove-drop="view">
+        <div class="image glyphicon glyphicon-remove"></div>
+        <div class="text">
+            Чтобы удалить запись перетащите ее сюда
+        </div>
+    </div>
+{% endmacro %}
+
+{% block note_edit_form %}
+    <div class="note-edit db-close" rv-class-key1="note.model:edit" rv-class-by_site="note.model:bySite" rv-class-key2="column.showPopup" rv-class-active="note.model:edit" rv-class-active="note.model:edit" rv-on-click="note.stopPropagation">
+        <div class="row">
+            <div class="close pull-right glyphicon glyphicon-remove" rv-on-click="note.closePopup"></div>
+            <div rv-if="note.model:bySite" class="note-header">Запись через Beauty&Secret</div>
+            <div rv-unless="note.model:bySite" class="note-header">Запись</div>
+        </div>
+        <div class="divide"></div>
+        <div class="row clearfix">
+            <div class="name last-name fl-l">
+                <label>
+                    Фамилия:
+                    <input type="text" class="" rv-autocomplete="note.loadBySurname" ac-source="/api/customer/surname" rv-value="note.model:lastName" rv-class-error="note.model:lNameError" />
+                </label>
+            </div>
+            <div class="name first-name fl-l">
+                <label>
+                    Имя:
+                    <input type="text" class="" rv-autocomplete="note.loadByName" ac-source="/api/customer/name" rv-value="note.model:firstName"  rv-class-error="note.model:fNameError" />
+                </label>
+            </div>
+        </div>
+        <div class="divide"></div>
+        <div class="clearfix row">
+            <label  class="fl-l phone" >
+                Телефон:
+                <input type="tel" rv-value="note.model:phone"
+                       rv-mask-phone="note.model:phone"
+                       rv-autocomplete="note.loadByPhone" ac-source="/api/customer/phone" rv-class-error="note.model:phoneError">
+            </label>
+            <label class="fl-l type">
+                Услуга:
+                <select
+                        {#rv-select-service="note.model" #}
+                        rv-on-change="note.selectService" class="fl-l"
+                        rv-class-error="note.model:serviceError"
+                        rv-conditional-tooltip="note.model:serviceError"
+                        >
+                    <option value="0">Выберите</option>
+                    <option rv-each-duration="column.view.model:durations|toArray"
+                            rv-value="duration.jobType"
+                            rv-data-duration="duration.duration"
+                            rv-option="note.model.attributes.service.id">{ duration.name }</option>
+                </select>
+            </label>
+        </div>
+        <div class="divide"></div>
+        <div class="row clearfix">
+            <div class="time fl-l">
+                <select rv-select-hours="note.model"  rv-class-error="note.model:hoursError">
+                    <option rv-each-hour="data.hours" rv-value="hour.val" rv-option="note.model.attributes.hours">
+                        { hour.label }
+                    </option>
+                </select>
+                -
+                <select rv-select-minutes="note.model"  rv-class-error="note.model:minutesError">
+                    <option rv-each-minute="data.minutes" rv-value="minute.val" rv-option="note.model.attributes.minutes">
+                        { minute.label }
+                    </option>
+                </select>
+            </div>
+
+            <div class="master-info fl-l">
+                <label>Мастер:</label>
+                <span>{ column.view.model:name }</span>
+            </div>
+        </div>
+        <div class="divide"></div>
+        <div class="row">
+            <a href="#" rv-if="note.model:approved" class="btn blue" rv-on-click="note.approveNote">Сохранить</a>
+            <a href="#" rv-unless="note.model:approved" class="btn blue" rv-on-click="note.approveNote">Подтвердить</a>
+            <a href="#" class="btn red" rv-on-click="note.removeNote">Удалить</a>
+        </div>
+    </div>
+{%endblock%}
+
+{% macro note_edit_form() %}
+    {{ block('note_edit_form') }}
+{% endmacro %}");
+
+{%block note_info_popup %}
+    <div class="note-info db-close" rv-class-key1="note.model:showInfo" rv-class-by_site="note.model:bySite" rv-class-key2="column.showPopup" rv-class-active="note.model:showInfo" rv-on-click="note.stopPreparation">
+        <div class="row">
+            <div class="close pull-right glyphicon glyphicon-remove" rv-on-click="note.closePopup"></div>
+            <div rv-if="note.model:bySite" class="note-header">Запись через Beauty&Secret</div>
+            <div rv-unless="note.model:bySite" class="note-header">Запись</div>
+        </div>
+
+        <div class="divide"></div>
+        <div class="customer-info row">
+            <a href="{{ path("calendar", { week_calendar: true }) }}">
+                <span rv-text="note.model:firstName"></span> <span rv-text="note.model:lastName"></span>
+            </a>
+        </div>
+        <div class="phone-info row">
+            <span rv-text="note.model:phone"></span>
+        </div>
+        <div class="divide"></div>
+
+        <div class="row">
+            <div class="data-label">Услуга:</div>
+            <div class="data"><span rv-text="note.model.attributes.service.name"></span></div>
+        </div>
+        <div class="row">
+            <div class="data-label">Мастер:</div>
+            <div class="data">
+                <span rv-text="note.model:firstName"></span> <span rv-text="note.model:lastName"></span>
+                <span rv-text="column.view.model:name"></span>
+            </div>
+        </div>
+        <div class="row">
+            <div class="data-label">Время:</div>
+            <div class="data">
+                <span class="column" rv-text="note.model:hours"></span>:<span class="column" rv-text="note.model:minutes"></span> -
+                <span class="column" rv-text="note.model:toHours"></span>:<span class="column" rv-text="note.model:toMinutes"></span>
+            </div>
+        </div>
+        <div class="divide"></div>
+
+        <div class="row">
+            <a href="#" class="btn indigo" rv-on-click="note.editNote">Редактировать</a>
+            <a href="#" class="btn red" rv-on-click="note.removeNote">Удалить</a>
+        </div>
+    </div>
+{%endblock%}
+
+{% macro note_info_popup() %}
+    {{ block('note_info_popup') }}
+{% endmacro %}
+
+
+{% macro categories_filter() %}
+    <div class="categories-widget row">
+        <div class="category col-md-4" rv-each-category="categories|toArray"
+             rv-class-disabled="category.disabled"
+             rv-on-click="view.categoryToggle">
+            <div rv-class="category.preview" rv-class-active="category.active" class="preview"></div>
+            <div class="text">{ category.name }</div>
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro masters_filter() %}
+    <div class="masters-widget"  rv-scroll="">
+        <table class="">
+            <tr>
+                <td class="" rv-each-master="data:masters|toArray">
+                    <div class="master master-wrapper" rv-on-click="view.masterClickHandler"  rv-class-active="master:active">
+                        <img rv-src="master:avatar.webPath" class="master-preview" rv-if="master:avatar" width="150" height="150" />
+                        <img src="/bundles/home/img/no_avatar.png" class="master-preview" rv-unless="master:avatar"  width="150" height="150" />
+                        <div class="name">
+                            { master:firstName } { master:lastName }
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+{% endmacro %}
+
+{% macro data_filter() %}
+    <div class="day-filter-widget clearfix">
+        <div class="prev arrow fl-l">
+            <span class="glyphicon glyphicon-arrow-left" rv-on-click="view.loadPrev"></span>
+        </div>
+        <div class="current fl-l">
+            <div rv-text="dateStr"></div>
+            <div class="datepicker-icon" rv-on-click="view.showPicker"><input type="text"></div>
+        </div>
+        <div class="next arrow fl-l">
+            <span class="glyphicon glyphicon-arrow-right" rv-on-click="view.loadNext"></span>
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro remove_widget() %}
+    <div class="remove-widget" rv-remove-drop="view">
+        <div class="image glyphicon glyphicon-remove"></div>
+        <div class="text">
+            Чтобы удалить запись перетащите ее сюда
+        </div>
+    </div>
+{% endmacro %}

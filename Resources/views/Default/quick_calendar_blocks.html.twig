@@ -1,0 +1,413 @@
+{% macro quick_calendar() %}
+    {% import 'CalendarBundle:Default:default_calendar_blocks.html.twig' as baseCalendarBlocks %}
+    <div class="calendar">
+        <div class="message hidden clearfix" rv-if="data.attributes.message">
+            <div class="text pull-left" rv-text="data.attributes.message"></div>
+            <span class="close glyphicon glyphicon-remove" rv-on-click="view.closeMessage"></span>
+        </div>
+        <div class="clearfix">
+            <div class="fl-l">
+                <div class="empty-data day" rv-on-click="view.activateAll">
+                </div>
+                <div class="time-labels clearfix">
+                    {{ baseCalendarBlocks.time_labels() }}
+                    <div class="dilimiter"></div>
+                </div>
+            </div>
+            <div class="table-wrapper fl-l">
+                <table class="columns"
+                       rv-call="view.initializeTable"
+                        >
+                    <table class="columns">
+                        <tr class="header time-labels">
+                            <td rv-each-column="columns" class="master invisible"
+                                    {#rv-on-click="view.activateMasterOnly"#}
+                                rv-class-active_td="column.view.model:active"
+                                    >
+                                <div>{ column.view.model:name }</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td rv-each-column="columns"
+                                class="invisible work-column"
+                                rv-class-active_td="column.view.model:active"
+                                rv-data-grid="calendarOptions.workGridStart"
+                                rv-click="column.view.clickHandler"
+                                rv-on-dblclick="column.view.addNote"
+                                rv-dropable-column="column"
+                                rv-css-height="calendarOptions.height"
+                                    >
+                                <div class="runner-field">
+                                    <div class="mark invisible"
+                                         rv-class-active="column.mark"
+                                            {#rv-class-key2="view.options.markAbility"#}
+                                         rv-css-top="column.markTop"
+                                            >
+                                    </div>
+                                </div>
+                                <div class="info-field">
+                                    <div class="note"
+                                         rv-css-height="note.model:duration|timeToPixel"
+                                         rv-css-top="note.getTopOffset"
+                                         rv-each-note="column.view.notes"
+                                         rv-class-by_site="note.model:bySite"
+                                         rv-data-note="note.model:id"
+                                         rv-resizable-note="note"
+                                         rv-data-column="column.view.model:id"
+                                         rv-data-category="column.view.model:category"
+                                         rv-add-el="note"
+                                         rv-silent-move="column.view"
+                                         rv-on-dblclick="note.showInfo"
+                                         rv-draggable-note="note"
+                                         rv-class-offset_top="note.model:reserveStart"
+                                         rv-class-offset_bottom="note.model:reserveEnd"
+                                            >
+                                    </div>
+                                    <div class="buffer"
+                                         rv-each-buffer="column.view.buffers"
+                                         rv-css-height="buffer.height"
+                                         rv-css-top="buffer.start"
+                                         rv-silent-move="column.view"
+                                         rv-on-click="column.view.stopPropagation"
+                                            >
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endmacro %}
+{% macro master_quick_calendar() %}
+    {% import 'CalendarBundle:Default:default_calendar_blocks.html.twig' as baseCalendarBlocks %}
+    <div class="calendar">
+        <div class="clearfix">
+            <div class="fl-l">
+                <div class="time-labels clearfix">
+                    {{ baseCalendarBlocks.time_labels() }}
+                    <div class="dilimiter"></div>
+                </div>
+            </div>
+            <div class="table-wrapper fl-l">
+                <table class="columns"
+                       rv-call="view.initializeTable"
+                        >
+                    <table class="columns">
+                        <tr>
+                            <td>
+                                <div rv-each-column="columns"
+                                     class="invisible work-column"
+                                     rv-class-active="column.view.model:active"
+                                     rv-data-grid="calendarOptions.workGridStart"
+                                     rv-click="column.view.clickHandler"
+                                     rv-on-dblclick="column.view.addNote"
+                                     rv-dropable-column="column"
+                                     {#rv-css-height="calendarOptions.height"#}
+                                     rv-css-top="column.view.offsetTop"
+                                     rv-css-height="column.view.height"
+                                        >
+                                    <div class="label">{ column.view.model:name }</div>
+                                    <div class="runner-field">
+                                        <div class="mark invisible"
+                                             rv-class-active="column.mark"
+                                                {#rv-class-key2="view.options.markAbility"#}
+                                             rv-css-top="column.markTop"
+                                                >
+                                        </div>
+                                    </div>
+                                    <div class="info-field">
+                                        <div class="note"
+                                             rv-css-height="note.model:duration|timeToPixel"
+                                             rv-css-top="note.getTopOffset"
+                                             rv-each-note="column.view.notes"
+                                             rv-class-by_site="note.model:bySite"
+                                             rv-data-note="note.model:id"
+                                             rv-resizable-note="note"
+                                             rv-data-column="column.view.model:id"
+                                             rv-data-category="column.view.model:category"
+                                             rv-add-el="note"
+                                             rv-silent-move="column.view"
+                                             rv-on-dblclick="note.showInfo"
+                                             rv-draggable-note="note"
+                                             rv-class-offset_top="note.model:reserveStart"
+                                             rv-class-offset_bottom="note.model:reserveEnd"
+                                                >
+                                        </div>
+                                        <div class="buffer"
+                                             rv-each-buffer="column.view.buffers"
+                                             rv-css-height="buffer.height"
+                                             rv-css-top="buffer.start"
+                                             rv-silent-move="column.view"
+                                             rv-on-click="column.view.stopPropagation"
+                                                >
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endmacro %}
+
+
+{% macro order_form(currentUserInfo) %}
+
+    <form class="" rv-class-hidden="data.checkSmsForm">
+        {#{% set customer = helper.checkCustomer %}#}
+        {% if currentUserInfo %}
+            <div class="form-group">
+                <label class="row phone" >
+                    <div class="col-md-8">Телефон:</div>
+                    <input class="col-md-15" type="phone" disabled="disabled" readonly
+                           rv-value="data.currentNoteView.model:phone"
+                           rv-mask-phone="data.currentNoteView.model:phone"
+                           rv-class-error="data.currentNoteView.model:phoneError">
+                </label>
+            </div>
+            <div class="form-group">
+                <label class="row">
+                    <div class="col-md-8">Фамилия:</div>
+                    <input type="text" class="col-md-15"  disabled="disabled" readonly
+                           rv-value="data.currentNoteView.model:lastName"
+                           rv-class-error="data.currentNoteView.model:lNameError" />
+                </label>
+            </div>
+            <div class="form-group">
+                <label class="row">
+                    <div class="col-md-8">Имя:</div>
+                    <input type="text" class="col-md-15" disabled="disabled" readonly
+                           rv-value="data.currentNoteView.model:firstName"
+                           rv-class-error="data.currentNoteView.model:fNameError" />
+                </label>
+            </div>
+        {% else %}
+            <div class="form-group">
+                <label class="row phone" >
+                    <div class="col-md-8">Телефон:</div>
+                    <input class="col-md-15" type="phone" rv-value="data.currentNoteView.model:phone"
+                           rv-autocomplete="data.currentNoteView.loadByPhone"
+                           ac-source="/api/customer/phone"
+                           rv-mask-phone="data.currentNoteView.model:phone"
+                           rv-class-error="data.currentNoteView.model:phoneError">
+                </label>
+            </div>
+            <div class="form-group">
+                <label class="row">
+                    <div class="col-md-8">Фамилия:</div>
+                    <input type="text" class="col-md-15"
+                           rv-autocomplete="data.currentNoteView.loadBySurname"
+                           ac-source="/api/customer/surname"
+                           rv-value="data.currentNoteView.model:lastName"
+                           rv-class-error="data.currentNoteView.model:lNameError" />
+                </label>
+            </div>
+            <div class="form-group">
+                <label class="row">
+                    <div class="col-md-8">Имя:</div>
+                    <input type="text" class="col-md-15"
+                           rv-autocomplete="data.currentNoteView.loadByName"
+                           ac-source="/api/customer/name"
+                           rv-value="data.currentNoteView.model:firstName"
+                           rv-class-error="data.currentNoteView.model:fNameError" />
+                </label>
+            </div>
+        {% endif %}
+        <div class="actions">
+            <a href="#" class="btn red"
+               rv-on-click="view.saveNote">Заказать
+            </a>
+        </div>
+    </form>
+{% endmacro %}
+
+{% macro sms_form() %}
+<div class="sms-form invisible" rv-class-active="data.checkSmsForm">
+    <div class="sms-pass">
+        <input type="text" maxlength="2" size="2" rv-value="data.smspass.a" />
+        <input type="text" maxlength="2" size="2" rv-value="data.smspass.b" />
+        <input type="text" maxlength="2" size="2" rv-value="data.smspass.c" />
+        <input type="text" maxlength="2" size="2" rv-value="data.smspass.d" />
+    </div>
+    <div class="actions">
+        <a href="#" class="btn red"
+           rv-on-click="view.checkSMS">Подтвердить
+        </a>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro master_time_chose() %}
+    {% import 'CalendarBundle:Default:default_calendar_blocks.html.twig' as baseCalendarBlocks %}
+    <div class="calendar_wrapper">
+        <div class="calendar">
+            <div class="clearfix">
+                <div class="fl-l">
+                    <div class="time-labels clearfix">
+                        <div class="empty-data day" rv-on-click="view.activateAll">
+                        </div>
+
+                        <div class="time-labels clearfix">
+                            {{ baseCalendarBlocks.time_labels('calendar.options.rows', 'calendar.options.times') }}
+                            <div class="dilimiter"></div>
+                        </div>
+                        <div class="dilimiter"></div>
+                    </div>
+                </div>
+                <div class="table-wrapper fl-l">
+                    <table class="columns"
+                           rv-console-calendar="calendar"
+                           rv-call="calendar.initializeTable"
+                            >
+                        <tr class="header time-labels">
+                            <td class="master"
+                                rv-text="calendar.options.dateStr"
+                                    >
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div rv-each-column="calendar.options.columns"
+                                     class="invisible work-column"
+                                     rv-class-active="column.view.model:active"
+                                     rv-data-grid="calendarOptions.workGridStart"
+                                     rv-click="column.view.clickHandler"
+                                     rv-on-dblclick="column.view.addNote"
+                                     rv-dropable-column="column"
+                                        {#rv-css-height="calendarOptions.height"#}
+                                     rv-css-top="column.view.offsetTop"
+                                     rv-css-height="column.view.height"
+                                        >
+                                    <div class="label">{ column.view.model:name }</div>
+                                    <div class="runner-field">
+                                        <div class="mark invisible"
+                                             rv-class-active="column.mark"
+                                                {#rv-class-key2="view.options.markAbility"#}
+                                             rv-css-top="column.markTop"
+                                                >
+                                        </div>
+                                    </div>
+                                    <div class="info-field">
+                                        <div class="note"
+                                             rv-css-height="note.model:duration|timeToPixel"
+                                             rv-css-top="note.getTopOffset"
+                                             rv-each-note="column.view.notes"
+                                             rv-class-by_site="note.model:bySite"
+                                             rv-data-note="note.model:id"
+                                                {#rv-resizable-note="note"#}
+                                             rv-data-column="column.view.model:id"
+                                             rv-data-category="column.view.model:category"
+                                             rv-add-el="note"
+                                             rv-silent-move="column.view"
+                                             rv-on-dblclick="note.showInfo"
+                                             rv-draggable-note="note"
+                                             rv-class-offset_top="note.model:reserveStart"
+                                             rv-class-offset_bottom="note.model:reserveEnd"
+                                                >
+                                        </div>
+                                        <div class="buffer"
+                                             rv-each-buffer="column.view.buffers"
+                                             rv-css-height="buffer.height"
+                                             rv-css-top="buffer.start"
+                                             rv-silent-move="column.view"
+                                             rv-on-click="column.view.stopPropagation"
+                                                >
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro salon_time_chose() %}
+    {% import 'CalendarBundle:Default:default_calendar_blocks.html.twig' as baseCalendarBlocks %}
+    <div class="calendar_wrapper">
+        <div class="calendar">
+            <div class="message hidden clearfix" rv-if="data.attributes.message">
+                <div class="text pull-left" rv-text="data.attributes.message"></div>
+                <span class="close glyphicon glyphicon-remove" rv-on-click="view.closeMessage"></span>
+            </div>
+            <div class="clearfix">
+                <div class="fl-l">
+                    <div class="empty-data day" rv-on-click="view.activateAll">
+                    </div>
+
+                    <div class="time-labels clearfix">
+                        {{ baseCalendarBlocks.time_labels('calendar.options.rows', 'calendar.options.times') }}
+                        <div class="dilimiter"></div>
+                    </div>
+                </div>
+                <div class="table-wrapper fl-l">
+                    <table class="columns"
+                           rv-call="calendar.initializeTable">
+                        <tr class="header time-labels">
+                            <td rv-each-column="calendar.options.columns" class="master invisible"
+                                    {#rv-on-click="view.activateMasterOnly"#}
+                                rv-class-active_td="column.view.model:active"
+                                    >
+                                <div>{ column.view.model:firstName } { column.view.model:lastName }</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td rv-each-column="calendar.options.columns"
+                                class="invisible work-column"
+                                rv-class-active_td="column.view.model:active"
+                                rv-data-grid="calendar.options.calendarOptions.workGridStart"
+                                rv-click="column.view.clickHandler"
+                                rv-on-dblclick="column.view.addNote"
+                                rv-dropable-column="column"
+                                rv-css-height="calendar.options.calendarOptions.height"
+                                    >
+                                <div class="runner-field">
+                                    <div class="mark invisible"
+                                         rv-class-active="column.mark"
+                                            {#rv-class-key2="view.options.markAbility"#}
+                                         rv-css-top="column.markTop"
+                                         rv-css-height="data.currentPixelDuration"
+                                            >
+                                    </div>
+                                </div>
+                                <div class="info-field">
+                                    <div class="note"
+                                         rv-css-height="note.model:duration|timeToPixel"
+                                         rv-css-top="note.getTopOffset"
+                                         rv-each-note="column.view.notes"
+                                         rv-class-by_site="note.model:static"
+                                         rv-data-note="note.model:id"
+                                         rv-resizable-note="note"
+                                         rv-data-column="column.view.model:id"
+                                         rv-data-category="column.view.model:category"
+                                         rv-add-el="note"
+                                         rv-silent-move="column.view"
+                                         rv-on-dblclick="note.showInfo"
+                                         rv-draggable-note="note"
+                                         rv-class-offset_top="note.model:reserveStart"
+                                         rv-class-offset_bottom="note.model:reserveEnd"
+                                            >
+                                    </div>
+                                    <div class="buffer"
+                                         rv-each-buffer="column.view.buffers"
+                                         rv-css-height="buffer.height"
+                                         rv-css-top="buffer.start"
+                                         rv-silent-move="column.view"
+                                         rv-on-click="column.view.stopPropagation"
+                                            >
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endmacro %}

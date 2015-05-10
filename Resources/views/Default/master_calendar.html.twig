@@ -1,0 +1,153 @@
+{% extends "UserBundle:Profile:edit_layout.html.twig" %}
+
+{% import "CalendarBundle:Default:default_calendar_blocks.html.twig" as baseCalendarBlocks %}
+{% import "CalendarBundle:Default:master_calendar_blocks.html.twig" as masterCalendarBlocks %}
+{% block form_content %}
+    <div class="day-calendar hidden container">
+        <div class="header">
+            <div class="clearfix">
+                <h2 class="pull-left">Расписание на день</h2>
+                <div class="pull-left"><a href="#" class="week-activate"
+                                          rv-class-hidden="data:weekCalendar"
+                                          rv-on-click="view.showWeekCalendar">Перейти в календарь на неделю</a></div>
+                <div class="pull-left"><a href="#" class="day-activate invisible"
+                                          rv-on-click="view.showDayCalendar"
+                                          rv-class-active="data:weekCalendar">Перейти в календарь на день</a></div>
+            </div>
+        </div>
+        <div class="master-supply">
+            <div class="supply form row" rv-class-active="master:edit">
+                <div class="title">Добавить отпуск</div>
+                <div class="supply-from-container col-md-12">
+                    <div class="supply-from">
+                        С:
+                        <input style="display: none;" rv-datepicker_toggle="data:schedule.attributes.supplyFrom" rv-value="data:schedule.attributes.supplyFrom" type="text" data-pick="0" />
+                    </div>
+                    <div class="supply-text"><span rv-text="data:schedule.attributes.supplyFrom|date_dmy"></span></div>
+                </div>
+                <div class="supply-to-container col-md-12">
+                    <div class="supply-from">
+                        до:
+                        <input style="display: none;" rv-datepicker_toggle="data:schedule.attributes.supplyTo" rv-value="data:schedule.attributes.supplyTo" type="text" data-pick="0" />
+                    </div>
+                    <div class="supply-text"><span rv-text="data:schedule.attributes.supplyTo|date_dmy"></span></div>
+                </div>
+            </div>
+            <div class="actions">
+                <a href="#" class="btn indigo" rv-on-click="view.saveMasterSupply">
+                    Сохранить
+                </a>
+            </div>
+        </div>
+        <div class="calendar-container">
+            <div class="info">
+                <div>1. Чтобы создать запись нажмите на пустом месте в графе нужного мастера</div>
+                <div>2. Чтобы узнать детальную информацию кликните на интересующую вас ячейку таблицы</div>
+            </div>
+            <div class="calendar">
+                <div class="supplying"></div>
+                <div class="widgets clearfix">
+                    <div class="legend fl-l">
+                        <div class="clearfix">
+                            <div class="in-site legend-ico fl-l"></div>
+                            <span>Запись через Beauty&Secret</span>
+                        </div>
+                        <div class="clearfix">
+                            <div class="even legend-ico fl-l"></div><span>Обычная запись</span>
+                        </div>
+                    </div>
+                    <div class="data-switcher fl-l">
+                        {{ baseCalendarBlocks.data_filter() }}
+                    </div>
+                    <div class="remove-container fl-l">
+                        {{ baseCalendarBlocks.remove_widget() }}
+                    </div>
+                </div>
+                <div class="calendar" rv-class-hidden="data:weekCalendar">
+                    {{ masterCalendarBlocks.day_calendar() }}
+                </div>
+                <div class="calendar invisible" rv-class-active="data:weekCalendar">
+                    {{ masterCalendarBlocks.week_calendar() }}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block data_block %}
+    window.OrderSystem = {};
+    OrderSystem.categories = {{ services|json_encode|raw }};
+
+
+    OrderSystem.schedule = {{ user.schedule.jsonSerialize|json_encode|raw }};
+    OrderSystem.bySite = true;
+    OrderSystem.salons = {{ salons|json_encode|raw }};
+{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" type="text/css" href="{{ asset('bundles/calendar/css/calendar.css') }}"/>
+    {{ parent() }}
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    {% javascripts
+    '@HomeBundle/Resources/public/js/avatar.view.js'
+    '@HomeBundle/Resources/public/js/models/avatar.model.js'
+
+    '@CalendarBundle/Resources/public/js/models/schedule.js'
+
+    '@ServicesBundle/Resources/public/js/even_salon/even_salon.model.js'
+    '@CalendarBundle/Resources/public/js/models/calendar/column_info.js'
+    '@CalendarBundle/Resources/public/js/models/calendar/calendar_info.js'
+    '@CalendarBundle/Resources/public/js/models/calendar/master_day_calendar_info.js'
+
+    '@CalendarBundle/Resources/public/js/models/calendar_note.js'
+    '@CalendarBundle/Resources/public/js/models/order_note.js'
+
+    '@CalendarBundle/Resources/public/js/views/calendar_components/base_calendar.js'
+    '@CalendarBundle/Resources/public/js/views/calendar_components/master_day_calendar.js'
+    '@CalendarBundle/Resources/public/js/views/calendar_components/column.js'
+    '@CalendarBundle/Resources/public/js/views/calendar_components/note.js'
+    '@CalendarBundle/Resources/public/js/views/calendar_components/master_note.js'
+    '@CalendarBundle/Resources/public/js/views/calendar_components/table.js'
+    %}
+    <script type="text/javascript" src="{{ asset_url }}"></script>
+    {% endjavascripts %}
+
+    <script type="text/javascript">
+        initializeAvatar(OrderSystem);
+        initializeBasePopup(OrderSystem);
+        initializeAvatarView(OrderSystem);
+
+        initializeSchedule(OrderSystem);
+
+        initializeEvenSalonModel(OrderSystem);
+
+        initializeColumnInfo(OrderSystem);
+        initializeColumn(OrderSystem);
+
+        initializeCalendarNote(OrderSystem);
+        initializeOrderNote(OrderSystem);
+        initializeBaseNote(OrderSystem);
+        initializeNote(OrderSystem);
+
+        initializeCalendarInfo(OrderSystem);
+        initializeMasterDayCalendarInfo(OrderSystem);
+        initializeBaseCalendar(OrderSystem);
+        initializeMasterDayCalendar(OrderSystem);
+
+        $(document).ready(function(){
+            OrderSystem.bothData = {};
+            OrderSystem.dayCaledarView = new OrderSystem.MasterDayCaledar({
+                el: $('.day-calendar')[0],
+                categories: OrderSystem.categories,
+                schedule: OrderSystem.schedule,
+                bySite: OrderSystem.bySite,
+                calendarsData: OrderSystem.bothData,
+                weekCalendar: {{ weekCalendarDefault?'true':'false' }},
+                salons: OrderSystem.salons,
+                date: new Date({{ date.timestamp * 1000 }})
+            });
+        });
+    </script>
+{% endblock %}

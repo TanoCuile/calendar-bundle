@@ -1,0 +1,182 @@
+{% extends '::base.html.twig' %}
+
+{% import "UserBundle:Profile:blocks.html.twig" as blocks %}
+{% block main_content %}
+    {% block menu_wrap %}
+        {{ blocks.advanced_menu() }}
+    {% endblock %}
+    <div class="main_content salon-order">
+        <div class="menu_wrap container menu-categories categories">
+            <h2>Прием заявок администратором</h2>
+
+            <div class="menu">
+                <ul class="">
+                    {% for id,category in serviceCategories %}
+                        <li{% if loop.first %} class="act"{% endif %}>
+                            <a href="#" class="service" data-cat="{{ category.id }}">{{ category.name }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="masters list">
+                {#{% for id,category in serviceCategories %}#}
+                <div class="submenu hidden" rv-data-cat="activeCat">
+                    <h3>Мастера этой категории услуг: </h3>
+                    {#{% for worker in category.workers %}#}
+                    <div class="item" rv-each-worker="activeWorkers">
+                        <a href="#"
+                           rv-class-active="worker.active"
+                           rv-data-master="worker.master.id"
+                           rv-on-click="masterClick"
+                                >
+                            <img rv-on-click="clickParent" rv-src="worker.master.avatar.webPath" class="master-preview" rv-if="worker.master.avatar" />
+                            <img rv-on-click="clickParent" src="/bundles/home/img/no_avatar.png" class="master-preview" rv-unless="worker.master.avatar" />
+                            <span class="check-button" rv-on-click="clickParent"></span>
+                            <div rv-on-click="clickParent" class="name">{ worker.master.firstName } { worker.master.lastName }</div>
+                        </a>
+                    </div>
+                    {#{% endfor %}#}
+                    <div class="clearfix"></div>
+                </div>
+                {#{% endfor %}#}
+            </div>
+        </div>
+        <div class="content container">
+            <div class="row">
+                <div class="left-sidebar col-md-6">
+                    <div class="job-types hidden">
+                        <div class="category-types" rv-if="active" id="accordion">
+                            <div class="service-type" rv-each-type="types">
+                                <h4 class="panel-title">
+                                    <a data-toggle="collapse" data-parent="#accordion"
+                                       rv-href="type.type.href"
+                                       rv-data-id="type.type.id">
+                                        { type.type.name }
+                                        <span></span>
+                                    </a>
+                                    <span class="clearfix"></span>
+                                </h4>
+
+                                <div rv-id="type.type.link"
+                                     class="data collapse in">
+                                    <ul>
+                                        <li rv-each-job="type.jobTypes">
+                                            <a href="#" class="job-type" rv-data-id="job.id" rv-data-cat="cat"
+                                               rv-data-type="type.type.id" rv-on-click="selectJobType"
+                                               rv-class-active="job.active"><span rv-on-click="clickParent"></span>{
+                                                job.name }</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="calendar_wrapper col-md-14">
+                    <div class="message hidden clearfix" rv-if="message">
+                        <div class="text pull-left" rv-text="message"></div>
+                        <span class="close glyphicon glyphicon-remove" rv-on-click="closeMessage"></span>
+                    </div>
+                    <div class="calendar-header hidden">
+                        <div class="prev-day fl-l glyphicon glyphicon-chevron-left" rv-on-click="loadPrev"></div>
+                        <div class="current-day">
+                            <div class="date-wrapper">
+                                <div class="date fl-l" rv-on-click="loadCurrent">{ dateStr }</div>
+                                <div class="datepicker-icon fl-l" rv-on-click="showPicker"><input type="text"/></div>
+                                <div class="clearfix"></div>
+                            </div>
+                        </div>
+                        <div class="next-day fl-l glyphicon glyphicon-chevron-right" rv-on-click="loadNext"></div>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="calendar hidden">
+                        <div class="table">
+                            <div class="shadow" rv-if="disable"></div>
+                            <table rv-if="show">
+                                <thead>
+                                <tr>
+                                    <td>
+                                        <div class="delimiter"></div>
+                                    </td>
+                                    <td rv-each-master="masters" rv-class-active="master.active"
+                                        rv-class-shadow="master.disable" class="cell">
+                                        { master.master.lastName }
+                                    </td>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr rv-each-row="rows" rv-data-time="row.id"
+                                        >
+                                    <td class="p-rel control"
+                                        rv-class-last="row.last"
+                                        rv-class-empty="row.empty"
+                                        rv-class-first="row.timeShow"
+                                            >
+                                        <div class="time" rv-if="row.timeShow" rv-height="row.timeSize">{ row.time }
+                                        </div>
+                                    </td>
+                                    <td rv-each-master="masters"
+                                        rv-class-active="master.active"
+                                        rv-class-shadow="master.disable"
+                                        rv-data-worker="master.master.id"
+                                        rv-on-click="setNotes" class="cell"></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="edit-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        window.OrderSystem = {};
+        OrderSystem.categories = {{ serviceCategories|json_encode|raw }};
+        OrderSystem.futureOrders = {};
+        OrderSystem.evenMasters = {{ evenMasters|json_encode|raw }};
+        OrderSystem.salon = {{ salon|json_encode|raw }};
+
+    </script>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" type="text/css"
+          href="{{ asset('bundles/calendar/lib/wdCalendar/jquery.weekcalendar.css') }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ asset('bundles/calendar/css/calendar.css') }}"/>
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    {% javascripts
+    '@CalendarBundle/Resources/public/js/models/calendar_note.js'
+    '@CalendarBundle/Resources/public/js/models/order_note.js'
+    '@CalendarBundle/Resources/public/js/models/working_note.js'
+    '@ServicesBundle/Resources/public/js/even_master/even_master.model.js'
+    '@ServicesBundle/Resources/public/js/services/models/price.model.js'
+    '@ServicesBundle/Resources/public/js/services/models/salon_price.model.js'
+    '@ServicesBundle/Resources/public/js/services/models/service.model.js'
+    '@ServicesBundle/Resources/public/js/services/models/job_type.model.js'
+    '@ServicesBundle/Resources/public/js/services/models/service_type.model.js'
+    '@ServicesBundle/Resources/public/js/services/models/service_category.model.js'
+
+    '@CalendarBundle/Resources/public/js/models/salon_calendar.js'
+
+    '@CalendarBundle/Resources/public/js/services/calendar_manager.js'
+    '@CalendarBundle/Resources/public/js/services/rivets_calendar.js'
+
+    '@CalendarBundle/Resources/public/js/views/abstract.note.js'
+    '@CalendarBundle/Resources/public/js/views/salon_note.js'
+    '@CalendarBundle/Resources/public/js/views/calendar_master.js'
+    '@CalendarBundle/Resources/public/js/views/calendar.js'
+    '@CalendarBundle/Resources/public/js/views/calendar_list.js'
+    '@CalendarBundle/Resources/public/js/views/services/services_category.js'
+    '@CalendarBundle/Resources/public/js/views/services/job_types.js'
+
+    '@CalendarBundle/Resources/public/js/services/order/main.js'
+
+    %}{#filter='jsminplus'#}
+    {#output='js/compiled/calendar.js'#}
+    <script type="text/javascript" src="{{ asset_url }}"></script>
+    {% endjavascripts %}
+{% endblock %}
